@@ -1,0 +1,406 @@
+from utils.libs import *
+DEBOUNCE_DUR = 0.25
+t = None
+matplotlib.use('Qt4Agg')
+
+class DrawingTool():
+    def __init__(self,image,boxes,ax,f):
+        self.image = image
+        self.ydim = image.shape[0]
+        self.xdim = image.shape[1]
+        self.img_dim = [ image.shape[1], image.shape[0] ] # [x,y]
+        self.boxes = boxes
+        self.temporary=None
+        self.north=None
+        self.origin=None
+        self.border_point=None
+        self.activeregion_point=None
+        self.border=[]
+        self.activeregion=[]
+        self.pos=[]
+        self.f = f
+        self.oldx=0
+        self.oldy=0
+        self.active_border_drawing=False
+        self.holding1 = False
+        self.holding3 = False
+        self.ax = ax
+        #self.ax2 = ax[1]
+        self.set_origin = False
+        self.set_north = False
+        self.dbl_click=False
+        self.sngl_click=False
+        self.exclude_image = False
+        self.event_count=0
+        self.bg = None
+        if len(boxes) > 0:
+                self.drawboxes()
+
+    def connect(self):
+        """Connect to all the events we need."""
+        print("Press:")
+        print("      Left  mouse button to select origin")
+        print("      Right mouse button to select north")
+        print("      Backspace to delete")
+        print("      Enter to continue")
+        self.cidpress = self.f.canvas.mpl_connect(
+            'button_press_event', self.on_press)
+        self.cidkpress = self.f.canvas.mpl_connect(
+            'key_press_event',self.on_key)
+        self.cidkrelease = self.f.canvas.mpl_connect(
+            'key_release_event', self.on_key_release)
+        self.cidrelease = self.f.canvas.mpl_connect(
+            'button_release_event', self.on_release)
+        self.cidmotion = self.f.canvas.mpl_connect(
+            'motion_notify_event', self.on_motion)
+
+    def disconnect(self):
+        """Disconnect all callbacks."""
+        self.f.canvas.mpl_disconnect(self.cidpress)
+        self.f.canvas.mpl_disconnect(self.cidkpress)
+        self.f.canvas.mpl_disconnect(self.cidmotion)
+        self.f.canvas.mpl_disconnect(self.cidrelease)
+        
+    def delete_info(self):
+        if ( self.origin ):
+            self.origin.remove()
+            self.origin = None
+        if ( self.north ):
+            self.north.remove()
+            self.north = None
+        if(self.ax.artists):
+            self.ax.artists = []
+        if(self.ax.lines):
+            self.ax.lines = []
+        return
+    
+    def on_key(self,event):
+        if event.key == 'backspace':
+            if (self.active_border_drawing):
+                a2 = self.ax.artists
+                for i in range(len(a2)-1,0,-1):
+                    self.ax.artists[i].remove()
+                # getting rid of every line except origin and north
+                # which HAVE to be the first two entries 
+                self.ax.lines = self.ax.lines[:2]
+                self.border=[]
+                self.activeregion=[]
+            else:
+                self.delete_info()
+                self.bg = self.obg
+            self.ax.figure.canvas.draw_idle()
+            return event.key
+        
+        if event.key == 'enter':
+            if ( not self.origin):
+                print("origin not selected")
+                return event.key
+            if (not self.north):
+                print ("north not selected")
+                return event.key
+            self.ax.add_line(self.origin)
+            self.ax.add_line(self.north)
+            self.disconnect()
+            plt.close(self.f)
+            return event.key
+        
+        if event.key == 'x':
+            self.exclude_image = True
+            self.disconnect()
+            plt.close(self.f)
+            return event.key
+        
+        if event.key == 'b' and not self.active_border_drawing:
+            if (not self.active_border_drawing):
+                if (not self.origin or not self.north):
+                    print("Origin and/or North not selected, please select them before the border")
+                    return event.key
+                self.active_border_drawing=True
+                print("Draw border by clicking and dragging")
+                print("to delete use backspace")
+                self.disconnect()
+                
+                self.cidpress = self.f.canvas.mpl_connect(
+                    'button_press_event', self.on_press_for_borders)
+                self.cidrelease = self.f.canvas.mpl_connect(
+                    'button_release_event', self.on_release_for_borders)
+                self.cidmotion = self.f.canvas.mpl_connect(
+                    'motion_notify_event', self.on_motion_for_borders)
+                self.cidkpress = self.f.canvas.mpl_connect(
+                    'key_press_event',self.on_key)
+                self.cidpick = self.f.canvas.mpl_connect(
+                    'pick_event',self.on_event_pick)
+                
+        if event.key == 'a':
+            if (not self.active_border_drawing):
+                if (not self.origin or not self.north or not self.border):
+                    print("Origin and/or North and/or Border not selected, please select them before the border")
+                    return event.key
+                self.active_border_drawing=True
+                print("Draw border by clicking and dragging")
+                print("to delete use backspace")
+                self.disconnect()
+            
+                self.cidpress = self.f.canvas.mpl_connect(
+                    'button_press_event', self.on_press_for_borders)
+                self.cidrelease = self.f.canvas.mpl_connect(
+                    'button_release_event', self.on_release_for_borders)
+                self.cidmotion = self.f.canvas.mpl_connect(
+                    'motion_notify_event', self.on_motion_for_activeregion)
+                self.cidkpress = self.f.canvas.mpl_connect(
+                    'key_press_event',self.on_key)
+                # self.cidpick = self.f.canvas.mpl_connect(
+                #     'pick_event',self.on_event_pick)
+                
+        return event.key
+    
+    def on_key_release(self,event):
+        #print( "key release : ",event.key )
+        if (self.active_border_drawing):
+            print("reconnecting to origin and north drawing")
+            self.disconnect()
+            
+            self.cidpress = self.f.canvas.mpl_connect(
+                'button_press_event', self.on_press)
+            self.cidkpress = self.f.canvas.mpl_connect(
+                'key_press_event',self.on_key)
+            self.cidrelease = self.f.canvas.mpl_connect(
+                'button_release_event', self.on_release)
+            self.cidmotion = self.f.canvas.mpl_connect(
+                'motion_notify_event', self.on_motion)
+            
+            self.active_border_drawing=False
+        
+    
+    #### ORIGIN AND NORTH ####
+    def on_press(self,event):
+        if ( event.button == 1 and not self.holding1 ):
+            self.holding1=True
+            if (not self.bg):
+                self.obg = self.f.canvas.copy_from_bbox(self.ax.bbox)
+                self.bg = self.f.canvas.copy_from_bbox(self.ax.bbox)
+            if (self.origin):
+                self.delete_info()
+                self.bg = self.obg
+    
+            self.set_origin = True
+            self.pos = self.onclick(event)
+            self.origin, = self.ax.plot(self.pos[0],self.pos[1],'bo',picker=None)
+            self.f.canvas.restore_region(self.bg)
+            if (self.north):
+                north_new_X_coord = [ self.pos[0] , self.north.get_xdata()[1]  ]
+                north_new_Y_coord = [ self.pos[1] , self.north.get_ydata()[1]  ]
+                self.north.remove()
+                self.north, = self.ax.plot(north_new_X_coord,
+                                           north_new_Y_coord,
+                                           'y')
+            self.ax.draw_artist(self.origin)
+            self.f.canvas.blit(self.ax.bbox)
+            self.f.canvas.flush_events()
+            self.bg = self.f.canvas.copy_from_bbox(self.ax.bbox)
+            
+        return
+    
+    def on_motion(self,event):
+        """Make AoE as mouse moves while making north line"""
+        if (not self.origin):
+            return
+        if (not self.north):
+            x0 = event.xdata
+            y0 = event.ydata
+            #while self.ax.artists != []:
+            #    self.ax.artists[0].remove()
+            #self.ax.artists = []
+            self.ax.artists = []
+            self.f.canvas.restore_region(self.bg)
+            radius = int( pow( pow(x0-self.origin.get_xdata()[0],2) +
+                               pow(y0-self.origin.get_ydata()[0],2) ,0.5) )
+            tmp_circle = plt.Circle((self.origin.get_xdata()[0],self.origin.get_ydata()[0]),
+                                    radius,
+                                    color='y',
+                                    alpha=0.1)
+            self.ax.add_artist(tmp_circle)
+            #self.ax.figure.canvas.draw_idle()
+            self.ax.draw_artist(tmp_circle)
+            self.f.canvas.blit(self.ax.bbox)
+            self.f.canvas.flush_events()
+           
+            
+    def on_release(self,event):
+        self.holding1 = False
+        if(self.north):
+            self.north.remove()
+        self.set_north=True
+        self.pos = self.onclick(event)
+        self.north, = self.ax.plot([self.origin.get_xdata()[0],self.pos[0]],
+                                   [self.origin.get_ydata()[0],self.pos[1]],
+                                   'y')
+        self.ax.figure.canvas.draw_idle()
+    
+    ###############
+    
+    #### BORDER ###
+    def on_press_for_borders(self,event):
+        #if ( event.button == 1 and not self.holding1 ):
+        self.holding1=True
+        #if ( event.button == 3 and not self.holding3 ):
+        #    self.holding3=True
+
+    def on_event_pick(self,event):
+        return
+        # if (event.artist):
+        #     #print("Selecting object {}-[{},{}]".format(event.artist,event.artist.get_xdata()[0],event.artist.get_ydata()[0]))
+                                                    
+        #     self.activeregion_point, = self.ax.plot(event.artist.get_xdata()[0],
+        #                                             event.artist.get_ydata()[0],'r.')
+        #     self.ax.add_artist(self.activeregion_point)
+        #     self.ax.draw_artist(self.activeregion_point)
+            
+        #     self.activeregion[int(event.artist.get_xdata()),
+        #                       int(event.artist.get_ydata())] = [self.activeregion_point.get_xdata(),
+        #                                                         self.activeregion_point.get_ydata()]
+                
+        #     self.f.canvas.blit(self.ax.bbox)
+        #     self.f.canvas.flush_events()
+            
+    def on_motion_for_borders(self,event):
+        #self.ax.figure.canvas.draw_idle()
+        if (self.holding1):
+            if (self.oldx != int(self.onclick(event)[0]) or self.oldy != int(self.onclick(event)[1])):
+                for line in self.ax.lines:
+                    if (line.contains(event)[0]):
+                        return
+                self.border_point, = self.ax.plot(self.onclick(event)[0],self.onclick(event)[1],'g.',picker=10)
+                self.odlx=int(self.border_point.get_xdata())
+                self.oldy=int(self.border_point.get_ydata())
+                self.ax.add_artist(self.border_point)
+                self.ax.draw_artist(self.border_point) 
+                self.border.append( np.array( [self.border_point.get_xdata(),
+                                               self.border_point.get_ydata()] ) )
+                self.f.canvas.blit(self.ax.bbox)
+                self.f.canvas.flush_events()
+            
+    def on_motion_for_activeregion(self,event):
+        if(self.holding1):
+            for line in self.ax.lines:
+                if (line.contains(event)[0]):
+                    self.activeregion_point, = self.ax.plot(line.get_xdata()[0],
+                                                            line.get_ydata()[0],'r.')
+                    self.ax.add_artist(self.activeregion_point)
+                    self.ax.draw_artist(self.activeregion_point)
+                    # if (self.activeregion):
+                    # print(sum(sum(np.all(np.array([self.activeregion_point.get_xdata(),
+                    #self.activeregion_point.get_ydata()]) == np.array(self.activeregion),axis=1))))
+                    
+                    if (  [self.activeregion_point.get_xdata(),
+                           self.activeregion_point.get_ydata()] not in self.activeregion ):
+                        self.activeregion.append( [ self.activeregion_point.get_xdata(),
+                                                    self.activeregion_point.get_ydata() ] )
+                    
+                    self.f.canvas.blit(self.ax.bbox)
+                    self.f.canvas.flush_events()
+                    return
+                
+                    #print("artist found",line,event,line.contains(event)[0])
+        # if(self.holding1):
+        #     if ( (int(event.xdata),int(event.ydata)) in self.border):
+        #         #if(event.artist in self.ax.artists):
+        #         #print("Hovering over object {}".format(event.inaxes))
+        #         self.activeregion_point, = self.ax.plot(event.xdata,event.ydata,'r.')
+        #         self.ax.add_artist(self.activeregion_point)
+        #         self.ax.draw_artist(self.activeregion_point)
+                
+        #         self.activeregion[int(event.xdata),int(event.ydata)] = self.border[int(event.xdata),int(event.ydata)]
+
+        #         self.f.canvas.blit(self.ax.bbox)
+        #         self.f.canvas.flush_events()
+
+        #(self.activezone_point,) = self.ax.plot(self.onclick(event)[0],self.onclick(event)[1],'r.')
+        #self.ax.add_artist(self.activezone_point)
+        #self.ax.figure.canvas.draw_idle()
+        #self.ax.draw_artist(self.activezone_point)
+        #self.f.canvas.blit(self.ax.bbox)
+        #self.f.canvas.flush_events()
+            
+    def on_release_for_borders(self,event):
+        #if (self.holding1):
+        self.holding1=False
+        #print(self.ax.artists[1:])
+        #self.border = self.ax.artists[1:] # first artist will be the yellow circle and must therefore be excluded
+        #remove all artists and keep only yellow circle
+        #print("---BORDER:",self.border)
+            
+        #if (self.holding3):
+        #self.holding3=False
+        #print(self.ax.artists[1:])
+        #self.activezone = self.ax.artists[1:] # first artist will be the yellow circle and must therefore be excluded
+            
+            
+
+    ##############
+
+    
+    def get_origin_position(self,opt=''):
+        if ('relative' in opt ):
+            return np.true_divide([ self.origin.get_xdata()[0] , self.origin.get_ydata()[0] ],self.img_dim)
+        else:
+            return [ self.origin.get_xdata()[0] , self.origin.get_ydata()[0] ] 
+
+    def get_north_position(self,opt=''):
+        if ('relative' in opt ):
+            ext = [item for sublist in [ self.img_dim , self.img_dim ] for item in sublist]
+            return np.true_divide([ self.north.get_xdata()[0] , self.north.get_ydata()[0] ,
+                                    self.north.get_xdata()[1] , self.north.get_ydata()[1] ],ext)
+        else:
+            return [ self.north.get_xdata()[0] , self.north.get_ydata()[0] ,
+                     self.north.get_xdata()[1] , self.north.get_ydata()[1] ] 
+
+    def getRotation(self,x1,y1,x2,y2):
+        if (y1-y2 < 0):
+            spin=np.pi
+        else:
+            spin=0
+        rotation = np.arctan((x1-x2)/(y1-y2))
+        return spin - rotation
+        
+    def get_rotatedImage(self,img,angle,pivot):
+        #excess = int(pow(pow(img.shape[0])+pow(img.shape[1]),0.5)/2)
+        padX = [int(img.shape[1] - pivot[0]), int(pivot[0])]
+        padY = [int(img.shape[0] - pivot[1]), int(pivot[1])]
+        imgP = np.pad(img, [padY, padX, [0, 0]], 'constant')
+        imgR = ndimage.rotate(imgP, angle, reshape=False)
+        ell = int(pow(pow(pivot[0]-pivot[2],2)+pow(pivot[1]-pivot[3],2),0.5))
+        xcentre = int(imgR.shape[0]/2)
+        ycentre = int(imgR.shape[1]/2)
+        return imgR[ycentre - ell : -ycentre+ell,
+                    xcentre - ell : -xcentre+ell]
+           
+            
+    def error(self,errval):
+        print(errval+" not defined")
+        
+    def drawboxes(self):
+        for box in self.boxes['detection_boxes']:
+            self.ax.add_patch(Rectangle((box[1]*self.ydim,box[0]*self.xdim),
+                                        (box[3]-box[1])*self.ydim,
+                                        (box[2]-box[0])*self.xdim,
+                                        fc='None',
+                                        ec='g',
+                                        lw=1 ))
+
+    def accepted_radius(self,opt=''):
+        if ('relative' in opt):
+            return pow( pow((self.north.get_xdata()[0]-self.north.get_xdata()[1])/self.xdim,2) +
+                             pow((self.north.get_ydata()[0]-self.north.get_ydata()[1])/self.ydim,2) ,0.5)
+        else:
+            return int( pow( pow(self.north.get_xdata()[0]-self.north.get_xdata()[1],2) +
+                             pow(self.north.get_ydata()[0]-self.north.get_ydata()[1],2) ,0.5) )
+    
+    def onclick(self,event):
+        # print('%s click: button=%d, x=%d, y=%d, xdata=%f, ydata=%f' %
+        #        ('double' if event.dblclick else 'single', event.button,
+        #         event.x, event.y, event.xdata, event.ydata))
+        pos = [event.xdata,event.ydata]
+        return pos
+
+   
