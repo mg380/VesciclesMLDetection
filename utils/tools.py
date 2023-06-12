@@ -17,6 +17,7 @@ def csv_to_dict(path_to_csv):
         new_vals=[]
         #print("{} {}... ".format(key,boxes_dict[key]))
         for val in boxes_dict[key]:
+            #print(val)
             if ( isinstance(boxes_dict[key][0],str)):
                 if ( '['  in boxes_dict[key][0] ):
                     new_val=[]
@@ -39,9 +40,15 @@ def csv_to_dict(path_to_csv):
             else:
                 new_vals.append(val)
                 
-        #print("{} {}... ".format(key,new_vals))
-        new_dict[key] = np.array(new_vals)
-                
+        #print("{} with shape ... ".format(key),end='')
+        #try:
+        #    print("{}\t e.g. {}".format(new_vals,new_vals[0]))
+        #except:
+        #    print("ERROR\t e.g. {}".format(new_vals[0]))
+        #    raise ValueError
+       #new_dict[key] = np.array(new_vals)
+        new_dict[key] = new_vals
+
     return new_dict
 
 def update_dictionaries(old_dict,update):

@@ -1,7 +1,7 @@
 from utils.libs import *
 DEBOUNCE_DUR = 0.25
 t = None
-matplotlib.use('Qt4Agg')
+matplotlib.use('Qt5Agg')
 
 class DrawingTool():
     def __init__(self,image,boxes,ax,f):
@@ -13,6 +13,7 @@ class DrawingTool():
         self.temporary=None
         self.north=None
         self.origin=None
+        self.circle=[]
         self.border_point=None
         self.activeregion_point=None
         self.border=[]
@@ -185,7 +186,8 @@ class DrawingTool():
     
             self.set_origin = True
             self.pos = self.onclick(event)
-            self.origin, = self.ax.plot(self.pos[0],self.pos[1],'bo',picker=None)
+            #self.origin, = self.ax.plot(self.pos[0],self.pos[1],'bo',picker=None)
+            self.origin, = self.ax.plot(self.pos[0],self.pos[1],'bo')
             self.f.canvas.restore_region(self.bg)
             if (self.north):
                 north_new_X_coord = [ self.pos[0] , self.north.get_xdata()[1]  ]
@@ -198,6 +200,7 @@ class DrawingTool():
             self.f.canvas.blit(self.ax.bbox)
             self.f.canvas.flush_events()
             self.bg = self.f.canvas.copy_from_bbox(self.ax.bbox)
+            #print("artists : ",len(self.ax.get_children()))
             
         return
     
@@ -208,10 +211,13 @@ class DrawingTool():
         if (not self.north):
             x0 = event.xdata
             y0 = event.ydata
-            #while self.ax.artists != []:
+            # while self.ax.artists != []:
             #    self.ax.artists[0].remove()
+            #while self.circle != []:
+            #    print(self.circle[-1])
+            #    self.circle[-1].remove()
             #self.ax.artists = []
-            self.ax.artists = []
+            #self.ax.artists.clear()
             self.f.canvas.restore_region(self.bg)
             radius = int( pow( pow(x0-self.origin.get_xdata()[0],2) +
                                pow(y0-self.origin.get_ydata()[0],2) ,0.5) )
@@ -219,12 +225,13 @@ class DrawingTool():
                                     radius,
                                     color='y',
                                     alpha=0.1)
-            self.ax.add_artist(tmp_circle)
+            #self.circle.append(tmp_circle)
+            #self.ax.add_artist(self.circle[-1])
             #self.ax.figure.canvas.draw_idle()
-            self.ax.draw_artist(tmp_circle)
-            self.f.canvas.blit(self.ax.bbox)
-            self.f.canvas.flush_events()
-           
+            #self.ax.draw_artist(self.circle[-1])
+            #self.f.canvas.blit(self.ax.bbox)
+            #self.f.canvas.flush_events()
+            #print(len(self.ax.get_children()))
             
     def on_release(self,event):
         self.holding1 = False

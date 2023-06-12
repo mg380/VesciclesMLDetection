@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-tf_path="/Users/mariograndi/TensorFlow/models/research"
+tf_path="models/research"
 
 cd $tf_path
 

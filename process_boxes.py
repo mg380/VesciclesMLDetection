@@ -8,14 +8,14 @@ def process_images(image_name,boxes_dict):
     reference_point = [ 0.5 , 0.2 ]
     
     #img = pd.DataFrame.from_dict(boxes_dict)['path_to_image_dir'] == image_name
-    img = boxes_dict['path_to_image_dir'] == image_name
+    img = np.array(boxes_dict['path_to_image_dir']) == image_name
     
     boxes={}
     for key, value in boxes_dict.items():
         accepted = []
         for i, val in enumerate(value):
             if (img[i]):
-                accepted.append(val)
+                accepted.append(np.array(val))
             
         boxes[key] = np.array(accepted)
         
@@ -164,5 +164,5 @@ def main_process(stored_boxes_csv,
     
     return 
 
-main_process("output/files/saving_private_boxes.csv",
+main_process("output/files/saving_private_boxes_multi.csv",
              "output/files/processed.csv")

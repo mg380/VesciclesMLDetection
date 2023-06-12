@@ -7,7 +7,7 @@ import warnings
 import time
 import tensorflow as tf
 import sys
-sys.path.append("models/object_detection") #add path to built object_detection lib  
+sys.path.append("models/resdearch/object_detection") #add path to built object_detection lib  
 from object_detection.utils import label_map_util
 from object_detection.utils import visualization_utils as viz_utils
 import pathlib
@@ -208,14 +208,14 @@ def store_box_info(data_dict,
 def main(argv):
     IMAGE_PATH=[pathlib.Path("input/images/20000X_0043.jpeg"),
                 pathlib.Path("input/images/663 20m_100kV_20kX_0017.jpg"),
-                pathlib.Path("input/images/663 20 min/663 20m_100kV_20kX_0092.jpg"),
+                pathlib.Path("input/images/663 20m_100kV_20kX_0092.jpg"),
                 pathlib.Path("input/images/663 20m_100kV_20kX_0040.jpg")]
     
-    PATH_TO_MODEL_DIR="models/my_faster_rcnn_resnet50_1024x1024_multiclass_steps6k/"
+    PATH_TO_MODEL_DIR="trained_models/my_faster_rcnn_resnet50_1024x1024_multiclass_steps6k/"
 
     LABEL_FILENAME="label_map_multiclass.pbtxt"
     
-    PATH_TO_LABELS="models/annotations/"+LABEL_FILENAME
+    PATH_TO_LABELS="trained_models/annotations/"+LABEL_FILENAME
 
     PATH_TO_SAVED_MODEL = PATH_TO_MODEL_DIR + "saved_model"
 
