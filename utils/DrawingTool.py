@@ -225,11 +225,11 @@ class DrawingTool():
                                     radius,
                                     color='y',
                                     alpha=0.1)
-            #self.circle.append(tmp_circle)
-            #self.ax.add_artist(self.circle[-1])
+            self.circle.append(tmp_circle)
+            self.ax.add_artist(self.circle[-1])
             #self.ax.figure.canvas.draw_idle()
-            #self.ax.draw_artist(self.circle[-1])
-            #self.f.canvas.blit(self.ax.bbox)
+            self.ax.draw_artist(self.circle[-1])
+            self.f.canvas.blit(self.ax.bbox)
             #self.f.canvas.flush_events()
             #print(len(self.ax.get_children()))
             
@@ -242,7 +242,11 @@ class DrawingTool():
         self.north, = self.ax.plot([self.origin.get_xdata()[0],self.pos[0]],
                                    [self.origin.get_ydata()[0],self.pos[1]],
                                    'y')
-        self.ax.figure.canvas.draw_idle()
+        self.ax.add_artist(self.north)
+        self.ax.draw_artist(self.north)
+        self.f.canvas.blit(self.ax.bbox)
+
+        # self.ax.figure.canvas.draw_idle()
     
     ###############
     
