@@ -21,3 +21,4 @@ trained_models/my_faster_rcnn_model filter=lfs diff=lfs merge=lfs -text
 trained_models/my_faster_rcnn_resnet50_1024x1024_multiclass_steps6k filter=lfs diff=lfs merge=lfs -text
 models/ filter=lfs diff=lfs merge=lfs -text
 models/** filter=lfs diff=lfs merge=lfs -text
+trained_models/** filter=lfs diff=lfs merge=lfs -text
