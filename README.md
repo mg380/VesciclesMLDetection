@@ -7,10 +7,21 @@ The idea for this project, rather than present a final tool for this task, is to
 
 I is iportant to note that this task only require **~80% identification efficiency** as the nature of the images makes perfect identification near impossible even for humans. 
 
+The code below should be able to identify the vescicles of interest in the image, draw boxes around them, and allow users to perform post processing analysis as well as generate some summary plots. 
+Here some examples of the expected images out of the tool.
+
+<img src="data/assets/example_image.jpeg" width="window.innerWidth" height="auto">
+<img src="data/assets/example_boxes.png" width="window.innerWidth" height="auto">
+<img src="data/assets/example_drawing.png" width="window.innerWidth" height="auto">
+<!-- ![image](data/assets/example_image.jpeg | width=100) -->
+<!-- ![image2](data/assets/example_boxes.png | w) -->
+<!-- ![image3](data/assets/example_drawing.png) -->
+
 ## Code Breakdown
 - input
 - output
 - models
+- data
 - trained_models
 - utils
 ## How to run
@@ -24,5 +35,23 @@ To do so just run the setup.sh script from terminal:
 
 > source setup.sh
 
-### Runme 
-# mg380.github.io
+if you need to setup the conda environment then run
+
+> source setup.sh conda create 
+
+if the conda environment is already setup then just run it to activate
+
+> source setup.sh conda activate
+
+### How to run
+The code can be run by running the individual source scripts or by using the runme file. I suggest using the runme script as it will ensure the scripts are ran as they are supposed to. 
+There are three main steps in the pipeline:
+1. run the ML box finder [finder]
+2. perform post processing using the drawing application [draw]
+3. run the analysis script [analysis]
+
+All above steps can be run using the appropriate command with the runme:
+
+> source runme.sh --run finder
+> source runme.sh --run draw
+> source runme.sh --run analysis 

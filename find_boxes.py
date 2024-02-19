@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 import warnings
 import time
 import tensorflow as tf
-import sys
-sys.path.append("models/resdearch/object_detection") #add path to built object_detection lib  
+import sys,os
+sys.path.append(os.getcwd()+"/models/research") #add path to built object_detection lib  
 from object_detection.utils import label_map_util
 from object_detection.utils import visualization_utils as viz_utils
 import pathlib
@@ -211,7 +211,7 @@ def main(argv):
                 pathlib.Path("input/images/663 20m_100kV_20kX_0092.jpg"),
                 pathlib.Path("input/images/663 20m_100kV_20kX_0040.jpg")]
     
-    PATH_TO_MODEL_DIR="trained_models/my_faster_rcnn_resnet50_1024x1024_multiclass_steps6k/"
+    PATH_TO_MODEL_DIR="trained_models/my_faster_rcnn_model/"
 
     LABEL_FILENAME="label_map_multiclass.pbtxt"
     
