@@ -28,20 +28,27 @@ Here some examples of the expected images out of the tool.
 ### Setup
 Firstly, the correct python environment needs to be setup in order to run the scripts.
 
-> conda env create env_setup.yml --name vesc
-
+```bash
+conda env create env_setup.yml --name vesc
+```
 then the trained models protos need to be added to the python path so that they can be used in code. 
 To do so just run the setup.sh script from terminal:
 
-> source setup.sh
+```bash
+source setup.sh
+```
 
 if you need to setup the conda environment then run
 
-> source setup.sh conda create 
+```bash
+source setup.sh conda create 
+```
 
 if the conda environment is already setup then just run it to activate
 
-> source setup.sh conda activate
+```bash
+source setup.sh conda activate
+```
 
 ### How to run
 The code can be run by running the individual source scripts or by using the runme file. I suggest using the runme script as it will ensure the scripts are ran as they are supposed to. 
@@ -52,6 +59,12 @@ There are three main steps in the pipeline:
 
 All above steps can be run using the appropriate command with the runme:
 
-> source runme.sh --run finder
-> source runme.sh --run draw
-> source runme.sh --run analysis 
+```bash
+source runme.sh --run finder
+```
+```bash
+source runme.sh --run draw
+```
+```bash
+source runme.sh --run analysis 
+```
