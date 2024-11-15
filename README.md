@@ -1,9 +1,8 @@
 # Vescicle ML Detection
 ## Introduction
-In this project I attempt to implement and train a RCNN algorithm to identify dyed brain vesicles from images taken using an electron microscope at different magnification levels.  
-Due to the sensitive nature of the images, only the pre-trained models have been pushed to this gitspace without the full set of training images, but only a small number of them are provided for testing. The untrained models can be found in the `models` folder, which is a submodule to the Tensorflow Model garden.
+In this project, I developed and trained a Region-based Convolutional Neural Network (RCNN) to identify dyed brain vesicles in electron microscope images captured at varying magnification levels. The objective was to demonstrate a proof of concept, exploring the adaptability of an RCNN—traditionally used for tasks like distinguishing between cats and dogs—to automate the detection of vesicles with high accuracy. Although the project is not intended as a fully operational solution, it successfully showcases the potential of leveraging RCNN architectures to address complex biomedical imaging challenges. 
 
-The idea for this project, rather than present a final tool for this task, is to provide a proof of concept that a general RCNN use normally to identify the differences between cats and dogsm can be used towards the automatisartion of this task with high enough identification efficiency. 
+Due to the sensitive nature of the images, only the pre-trained models have been pushed to this gitspace without the full set of training images, but only a small number of them are provided for testing. The untrained models can be found in the `models` folder, which is a submodule to the Tensorflow Model garden.
 
 I is iportant to note that this task only require **~80% identification efficiency** as the nature of the images makes perfect identification near impossible even for humans. 
 
